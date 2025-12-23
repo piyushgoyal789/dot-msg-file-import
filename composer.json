@@ -1,0 +1,8 @@
+{
+    "require": {
+        "guzzlehttp/guzzle": "^7.10",
+        "thiagoalessio/tesseract_ocr": "^2.13",
+        "phpoffice/phpword": "^1.3",
+        "koopa/php-ole-msg-parser": "dev-master"
+    }
+}

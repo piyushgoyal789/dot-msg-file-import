@@ -1,0 +1,22 @@
+{
+    "name": "koopa/php-ole-msg-parser",
+    "description": "Minimal PHP library for parsing Outlook .msg files incl. attachments stored in OLE compound documents.",
+    "type": "library",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "kon",
+            "role": "Maintainer"
+        }
+    ],
+    "require": {
+        "php": "^7.4"
+    },
+    "autoload": {
+        "psr-4": {
+            "Opt\\OLE\\": "src/Opt/OLE/"
+        }
+    },
+    "minimum-stability": "stable",
+    "prefer-stable": true
+}
