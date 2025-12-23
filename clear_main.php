@@ -28,7 +28,7 @@ try {
     
     $db->commit();
     
-    // Redirect with success message
+    // Redirect with success message to main.php
     header('Location: main.php?msg=' . urlencode('All tables emptied successfully') . '&status=success');
     exit();
     
@@ -36,7 +36,7 @@ try {
     if (isset($db) && $db->inTransaction()) {
         $db->rollBack();
     }
-    // Redirect with error message
+    // Redirect with error message to main.php
     header('Location: main.php?msg=' . urlencode('Failed to empty tables: ' . $e->getMessage()) . '&status=error');
     exit();
 }
