@@ -31,6 +31,7 @@ function readMsgFile($filePath) {
 
 $message = '';
 $messageType = '';
+$uploadDetails = '';
 
 // Handle QS Version upload
 if (isset($_POST['upload_qs']) && isset($_FILES['msg_files_qs'])) {
@@ -43,11 +44,18 @@ if (isset($_POST['upload_qs']) && isset($_FILES['msg_files_qs'])) {
     }
     
     $successCount = 0;
+    $errorCount = 0;
+    $errorDetails = [];
     
     for ($i = 0; $i < $totalFiles; $i++) {
-        if ($uploadedFiles['error'][$i] !== UPLOAD_ERR_OK) continue;
-        
         $fileName = basename($uploadedFiles['name'][$i]);
+        
+        if ($uploadedFiles['error'][$i] !== UPLOAD_ERR_OK) {
+            $errorCount++;
+            $errorDetails[] = "Upload failed for {$fileName} (Error code: {$uploadedFiles['error'][$i]})";
+            continue;
+        }
+        
         $targetPath = $uploadsDir . '/' . $fileName;
         
         if (move_uploaded_file($uploadedFiles['tmp_name'][$i], $targetPath)) {
@@ -58,20 +66,38 @@ if (isset($_POST['upload_qs']) && isset($_FILES['msg_files_qs'])) {
                     $database = new MsgDatabase();
                     $database->processMsgFile($targetPath, $msgData);
                     $successCount++;
+                } else {
+                    $errorCount++;
+                    $errorDetails[] = "Failed to parse {$fileName}";
                 }
             } catch (Exception $e) {
-                // Handle error silently
+                $errorCount++;
+                $errorDetails[] = "Processing error for {$fileName}: " . $e->getMessage();
             }
             unlink($targetPath);
+        } else {
+            $errorCount++;
+            $errorDetails[] = "Failed to move uploaded file {$fileName}";
         }
     }
     
     if ($successCount > 0) {
-        $message = "QS Version: {$successCount} file(s) processed successfully";
+        $message = "QS Version: {$successCount} of {$totalFiles} file(s) processed successfully";
         $messageType = 'success';
     } else {
-        $message = "QS Version: Failed to process files";
+        $message = "QS Version: No files processed successfully";
         $messageType = 'error';
+    }
+    
+    // Add detailed breakdown
+    $uploadDetails = "<strong>Upload Summary:</strong><br>";
+    $uploadDetails .= "✅ Successful: {$successCount}<br>";
+    $uploadDetails .= "❌ Errors: {$errorCount}<br>";
+    if (!empty($errorDetails)) {
+        $uploadDetails .= "<br><strong>Error Details:</strong><br>";
+        foreach ($errorDetails as $error) {
+            $uploadDetails .= "• " . htmlspecialchars($error) . "<br>";
+        }
     }
 }
 
@@ -86,11 +112,18 @@ if (isset($_POST['upload_fc']) && isset($_FILES['msg_files_fc'])) {
     }
     
     $successCount = 0;
+    $errorCount = 0;
+    $errorDetails = [];
     
     for ($i = 0; $i < $totalFiles; $i++) {
-        if ($uploadedFiles['error'][$i] !== UPLOAD_ERR_OK) continue;
-        
         $fileName = basename($uploadedFiles['name'][$i]);
+        
+        if ($uploadedFiles['error'][$i] !== UPLOAD_ERR_OK) {
+            $errorCount++;
+            $errorDetails[] = "Upload failed for {$fileName} (Error code: {$uploadedFiles['error'][$i]})";
+            continue;
+        }
+        
         $targetPath = $uploadsDir . '/' . $fileName;
         
         if (move_uploaded_file($uploadedFiles['tmp_name'][$i], $targetPath)) {
@@ -106,20 +139,38 @@ if (isset($_POST['upload_fc']) && isset($_FILES['msg_files_fc'])) {
                     }
                     $database->processMsgFile($targetPath, $msgData);
                     $successCount++;
+                } else {
+                    $errorCount++;
+                    $errorDetails[] = "Failed to parse {$fileName}";
                 }
             } catch (Exception $e) {
-                // Handle error silently
+                $errorCount++;
+                $errorDetails[] = "Processing error for {$fileName}: " . $e->getMessage();
             }
             unlink($targetPath);
+        } else {
+            $errorCount++;
+            $errorDetails[] = "Failed to move uploaded file {$fileName}";
         }
     }
     
     if ($successCount > 0) {
-        $message = "FC Version: {$successCount} file(s) processed successfully";
+        $message = "FC Version: {$successCount} of {$totalFiles} file(s) processed successfully";
         $messageType = 'success';
     } else {
-        $message = "FC Version: Failed to process files";
+        $message = "FC Version: No files processed successfully";
         $messageType = 'error';
+    }
+    
+    // Add detailed breakdown
+    $uploadDetails = "<strong>Upload Summary:</strong><br>";
+    $uploadDetails .= "✅ Successful: {$successCount}<br>";
+    $uploadDetails .= "❌ Errors: {$errorCount}<br>";
+    if (!empty($errorDetails)) {
+        $uploadDetails .= "<br><strong>Error Details:</strong><br>";
+        foreach ($errorDetails as $error) {
+            $uploadDetails .= "• " . htmlspecialchars($error) . "<br>";
+        }
     }
 }
 
@@ -345,6 +396,11 @@ if (isset($_POST['upload_fc']) && isset($_FILES['msg_files_fc'])) {
         <div class="message <?php echo $messageType; ?>">
             <strong><?php echo $messageType === 'success' ? '✅ Success!' : '❌ Error!'; ?></strong> 
             <?php echo htmlspecialchars($message); ?>
+            <?php if ($uploadDetails): ?>
+                <div style="margin-top: 10px; padding-top: 10px; border-top: 1px solid rgba(0,0,0,0.1);">
+                    <?php echo $uploadDetails; ?>
+                </div>
+            <?php endif; ?>
         </div>
         <?php endif; ?>
 
